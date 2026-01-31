@@ -146,23 +146,32 @@ async function processMessage(text) {
                 // 4. FLOW MACHINE OR REAL API
 
                 if (API_CONFIG.ENABLED) {
-                    // --- CALL OUR SECURE BACKEND ---
                     try {
-                        const apiResponse = await fetch(API_CONFIG.URL, {
+                        const apiResponse = await fetch("/api/chat", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ message: text })
                         });
-                        const data = await apiResponse.json();
-                        response = data.reply || "No reply from server";
-                        source = "Real API (Secure)";
-                        if (response) saveToCache(cleanText, response);
-                    } catch (error) {
-                        console.error("API Error Details:", error);
-                        // response = "Sorry, I am facing some connection issues."; 
-                        // Show actual error for debugging (User can remove later)
-                        response = "Connection Error: " + (error.message || "Unknown error");
-                        source = "API Error";
+
+                        let data;
+                        try {
+                            data = await apiResponse.json();
+                        } catch {
+                            throw new Error("AI response error 😵");
+                        }
+
+                        if (data.reply) {
+                            response = data.reply;
+                            source = "Real API";
+                            saveToCache(cleanText, response);
+                        } else {
+                            response = "Server busy hai 😅";
+                            source = "Backend Error";
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        response = err.message === "AI response error 😵" ? err.message : "Network error ❌";
+                        source = "Connection Error";
                     }
                 } else {
                     // DEFAULT: Simulated Logic
