@@ -13,20 +13,19 @@ export default async function handler(req, res) {
     }
 
     if (req.method !== "POST") {
-        return res.status(405).json({ error: true, message: "Method not allowed" });
+        return res.status(405).json({ reply: "Method not allowed" });
     }
 
     try {
-        const { message } = req.body;
+        const body = req.body;
 
-        if (!message) {
+        if (!body || !body.message) {
             return res.status(400).json({
-                error: true,
-                message: "Message missing",
+                reply: "Message missing",
             });
         }
 
-        const groqResponse = await fetch(
+        const response = await fetch(
             "https://api.groq.com/openai/v1/chat/completions",
             {
                 method: "POST",
@@ -40,37 +39,36 @@ export default async function handler(req, res) {
                         {
                             role: "system",
                             content:
-                                "You are a WhatsApp-style AI agent. Reply short, friendly, and clear.",
+                                "You are a WhatsApp style AI sales agent. Reply short and friendly.",
                         },
                         {
                             role: "user",
-                            content: message,
+                            content: body.message,
                         },
                     ],
                 }),
             }
         );
 
-        // ❗ Agar Groq down ho ya error ho
-        if (!groqResponse.ok) {
-            const text = await groqResponse.text();
-            console.error("Groq Error:", text);
-            return res.status(500).json({
-                error: true,
-                message: "AI server busy",
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Groq API Error:", errorText);
+
+            // Return 200 with error message as requested by user pattern
+            return res.status(200).json({
+                reply: "Server busy hai 😅 thodi der baad try karo",
             });
         }
 
-        const data = await groqResponse.json();
+        const data = await response.json();
 
         return res.status(200).json({
             reply: data.choices[0].message.content,
         });
-    } catch (error) {
-        console.error("Server Error:", error);
-        return res.status(500).json({
-            error: true,
-            message: "Internal server error",
+    } catch (err) {
+        console.error("Fatal Error:", err);
+        return res.status(200).json({
+            reply: "AI temporarily unavailable 🤖",
         });
     }
 }
