@@ -6,9 +6,16 @@
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    /* Prevent body scroll */
+}
+
 body {
     background-color: #d1d7db;
-    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -17,8 +24,10 @@ body {
 .app-container {
     width: 100%;
     max-width: 450px;
-    /* Mobile width simulation */
-    height: 100vh;
+    height: 100%;
+    /* Fallback */
+    height: 100dvh;
+    /* Dynamic viewport height for mobile browsers */
     background-color: #efe7dd;
     /* WhatsApp default bg */
     /* Background moved to chat-area */

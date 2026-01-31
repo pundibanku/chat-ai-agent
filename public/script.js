@@ -11,7 +11,7 @@ const LOGS_KEY = 'chatLogs';
 
 // --- CONFIGURATION ---
 const COMPANY_NAME = "vaidmize AI Agents"; // 🟢 CHANGE THIS to your Business Name
-const STARTING_GREETING = `Hello! 👋 Welcome to *${vaidmize}*.\n\nI am your automated Sales Assistant. How can I grow your business today?`;
+const STARTING_GREETING = `Hello! 👋 Welcome to *${COMPANY_NAME}*.\n\nI am your automated Sales Assistant. How can I grow your business today?`;
 
 // ⚠️ SAFETY WARNING: 
 // Browser wale code me API Key dalna safe nahi hota (koi bhi inspect karke chura sakta hai).
