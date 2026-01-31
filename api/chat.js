@@ -43,7 +43,7 @@ export default async function handler(req, res) {
         console.error("API Error:", error);
         // detailed error for client debugging
         res.status(500).json({
-            reply: `Connection Error: ${error.message}. Please check if the 'Generative Language API' is enabled in your Google Cloud Console.`
+            reply: `[Fix Applied] Connection Error: ${error.message}. Please check if the 'Generative Language API' is enabled in your Google Cloud Console.`
         });
     }
 }
