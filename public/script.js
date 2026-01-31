@@ -147,30 +147,20 @@ async function processMessage(text) {
 
                 if (API_CONFIG.ENABLED) {
                     try {
-                        const apiResponse = await fetch("/api/chat", {
+                        const res = await fetch("/api/chat", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ message: text })
+                            body: JSON.stringify({ message: text }),
                         });
 
-                        let data;
-                        try {
-                            data = await apiResponse.json();
-                        } catch {
-                            throw new Error("AI response error 😵");
-                        }
+                        const data = await res.json();
+                        response = data.reply || "No reply 😶";
+                        source = "Real API";
 
-                        if (data.reply) {
-                            response = data.reply;
-                            source = "Real API";
-                            saveToCache(cleanText, response);
-                        } else {
-                            response = "Server busy hai 😅";
-                            source = "Backend Error";
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        response = err.message === "AI response error 😵" ? err.message : "Network error ❌";
+                        if (data.reply) saveToCache(cleanText, data.reply);
+                    } catch (e) {
+                        console.error(e);
+                        response = "Network error ❌";
                         source = "Connection Error";
                     }
                 } else {
