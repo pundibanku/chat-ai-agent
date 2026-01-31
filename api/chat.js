@@ -30,17 +30,9 @@ export default async function handler(req, res) {
         const genAI = new GoogleGenerativeAI(API_KEY);
 
         // Strategy: Try Flash first (faster/cheaper), fallback to Pro (stable)
-        let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        let result;
-
-        try {
-            result = await model.generateContent(`You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`);
-        } catch (flashError) {
-            console.warn("Gemini 1.5 Flash failed, trying Gemini Pro...", flashError.message);
-            // Fallback
-            model = genAI.getGenerativeModel({ model: "gemini-pro" });
-            result = await model.generateContent(`You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`);
-        }
+        // Strategy: Use the standard Gemini 1.5 Flash model
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(`You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`);
 
         const response = await result.response;
         const botReply = response.text() || "Sorry, I couldn't generate a response.";
