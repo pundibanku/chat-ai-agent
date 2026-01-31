@@ -9,7 +9,10 @@ const sendBtn = document.getElementById('send-btn');
 const CACHE_KEY = 'responseCache';
 const LOGS_KEY = 'chatLogs';
 
-// --- API CONFIGURATION ---
+// --- CONFIGURATION ---
+const COMPANY_NAME = "vaidmize AI Agents"; // 🟢 CHANGE THIS to your Business Name
+const STARTING_GREETING = `Hello! 👋 Welcome to *${vaidmize}*.\n\nI am your automated Sales Assistant. How can I grow your business today?`;
+
 // ⚠️ SAFETY WARNING: 
 // Browser wale code me API Key dalna safe nahi hota (koi bhi inspect karke chura sakta hai).
 // Best tareeka ye hai ki aap key ko Backend (Node.js/Python) me rakhein.
@@ -45,7 +48,7 @@ const INITIAL_CACHE = {
 // 2. FLOW & SCRIPTS
 const FLOW = {
     EN: {
-        GREETING: "Hi there! 👋 I'm your AI Business Assistant.\n\nTo see how I can help you, may I ask a few quick questions?",
+        GREETING: STARTING_GREETING, // Uses the variable we defined at top
         Q1_BIZ_TYPE: "Great! First, what type of business do you run? (e.g., E-commerce, Agency, Local Shop)",
         Q2_MODE: "Got it. Is your business primarily **Online**, **Offline**, or **Hybrid**?",
         Q3_GOAL: "Understood. What is your main goal right now?\n\n(Sales, Leads, or Support?)",
@@ -94,6 +97,12 @@ userInput.addEventListener('keypress', (e) => {
 function handleUserMessage() {
     const text = userInput.value.trim();
     if (!text) return;
+
+    // --- SECRET ADMIN SHORTCUT ---
+    if (text.toLowerCase() === '/admin') {
+        window.location.href = 'admin.html';
+        return;
+    }
 
     addMessage(text, 'user');
     userInput.value = '';
@@ -149,8 +158,10 @@ async function processMessage(text) {
                         source = "Real API (Secure)";
                         if (response) saveToCache(cleanText, response);
                     } catch (error) {
-                        console.error("API Error:", error);
-                        response = "Sorry, I am facing some connection issues.";
+                        console.error("API Error Details:", error);
+                        // response = "Sorry, I am facing some connection issues."; 
+                        // Show actual error for debugging (User can remove later)
+                        response = "Connection Error: " + (error.message || "Unknown error");
                         source = "API Error";
                     }
                 } else {

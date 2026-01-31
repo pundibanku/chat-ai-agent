@@ -21,9 +21,8 @@ body {
     height: 100vh;
     background-color: #efe7dd;
     /* WhatsApp default bg */
-    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-    /* Subtle pattern */
-    background-repeat: repeat;
+    /* Background moved to chat-area */
+    display: flex;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -32,9 +31,11 @@ body {
 
 @media (min-width: 450px) {
     .app-container {
-        height: 90vh;
+        height: 100vh;
+        /* Changed from 90vh to full screen to avoid external scrollbar if desired, or keep centered */
+        max-height: 900px;
+        /* Limit height on large screens */
         border-radius: 0;
-        /* Removing radius for realistic feel or keep if desired */
     }
 }
 
@@ -46,6 +47,8 @@ body {
     align-items: center;
     color: white;
     z-index: 10;
+    flex-shrink: 0;
+    /* Prevent header from shrinking */
 }
 
 .avatar img {
@@ -68,11 +71,15 @@ body {
 /* Chat Area */
 .chat-area {
     flex: 1;
+    /* Takes all available space */
     overflow-y: auto;
+    /* Scroll inside this div only */
     padding: 20px 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    background-repeat: repeat;
 }
 
 /* Scrollbar styles */
