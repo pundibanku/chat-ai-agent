@@ -1,49 +1,76 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-    // 1. CORS Headers
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'OPTIONS,POST');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'Content-Type, Authorization, X-Requested-With'
-    );
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
 
-    // 2. Validate API Key
-    const API_KEY = process.env.GEMINI_API_KEY;
-    if (!API_KEY) {
-        return res.status(500).json({ error: "Server Error: Missing GEMINI_API_KEY" });
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: "Method Not Allowed" });
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: true, message: "Method not allowed" });
     }
 
     try {
         const { message } = req.body;
-        const genAI = new GoogleGenerativeAI(API_KEY);
 
-        // Strategy: Try Flash first (faster/cheaper), fallback to Pro (stable)
-        // Strategy: Use the standard Gemini 1.5 Flash model
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(`You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`);
+        if (!message) {
+            return res.status(400).json({
+                error: true,
+                message: "Message missing",
+            });
+        }
 
-        const response = await result.response;
-        const botReply = response.text() || "Sorry, I couldn't generate a response.";
+        const groqResponse = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: "llama3-8b-8192",
+                    messages: [
+                        {
+                            role: "system",
+                            content:
+                                "You are a WhatsApp-style AI agent. Reply short, friendly, and clear.",
+                        },
+                        {
+                            role: "user",
+                            content: message,
+                        },
+                    ],
+                }),
+            }
+        );
 
-        res.status(200).json({ reply: botReply });
+        // ❗ Agar Groq down ho ya error ho
+        if (!groqResponse.ok) {
+            const text = await groqResponse.text();
+            console.error("Groq Error:", text);
+            return res.status(500).json({
+                error: true,
+                message: "AI server busy",
+            });
+        }
 
+        const data = await groqResponse.json();
+
+        return res.status(200).json({
+            reply: data.choices[0].message.content,
+        });
     } catch (error) {
-        console.error("API Error:", error);
-        // detailed error for client debugging
-        res.status(500).json({
-            reply: `[Fix Applied] Connection Error: ${error.message}. Please check if the 'Generative Language API' is enabled in your Google Cloud Console.`
+        console.error("Server Error:", error);
+        return res.status(500).json({
+            error: true,
+            message: "Internal server error",
         });
     }
 }
