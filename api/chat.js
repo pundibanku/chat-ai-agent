@@ -18,10 +18,10 @@ export default async function handler(req, res) {
 
     // 2. Security Check
     // We read the key from the environment variable provided in Vercel
-    const API_KEY = process.env.OPENAI_API_KEY;
+    const API_KEY = process.env.GEMINI_API_KEY;
 
     if (!API_KEY) {
-        return res.status(500).json({ error: "Server Error: Missing API Key" });
+        return res.status(500).json({ error: "Server Error: Missing GEMINI_API_KEY" });
     }
 
     if (req.method !== 'POST') {
@@ -61,6 +61,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error("API Error:", error);
-        res.status(500).json({ reply: "Connection failed. Please check API Key." });
+        // Return actual error for debugging
+        res.status(500).json({ reply: `Error: ${error.message}` });
     }
 }
