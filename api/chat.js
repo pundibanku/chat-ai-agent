@@ -1,8 +1,7 @@
-
-// import fetch from 'node-fetch'; // Vercel Node 18+ has native fetch
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-    // 1. Setup Headers for CORS
+    // 1. CORS Headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'OPTIONS,POST');
@@ -16,10 +15,8 @@ export default async function handler(req, res) {
         return;
     }
 
-    // 2. Security Check
-    // We read the key from the environment variable provided in Vercel
+    // 2. Validate API Key
     const API_KEY = process.env.GEMINI_API_KEY;
-
     if (!API_KEY) {
         return res.status(500).json({ error: "Server Error: Missing GEMINI_API_KEY" });
     }
@@ -30,38 +27,31 @@ export default async function handler(req, res) {
 
     try {
         const { message } = req.body;
+        const genAI = new GoogleGenerativeAI(API_KEY);
 
-        // --- SWITCHED TO GEMINI API (Based on your Key format 'AIza...') ---
+        // Strategy: Try Flash first (faster/cheaper), fallback to Pro (stable)
+        let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        let result;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`
-                    }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-
-        // Check for Gemini specific errors
-        if (data.error) {
-            throw new Error(data.error.message || "Gemini API Error");
+        try {
+            result = await model.generateContent(`You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`);
+        } catch (flashError) {
+            console.warn("Gemini 1.5 Flash failed, trying Gemini Pro...", flashError.message);
+            // Fallback
+            model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            result = await model.generateContent(`You are a helpful AI Business Sales Agent. Respond in short, sales-focused messages to this user: ${message}`);
         }
 
-        // Parse Gemini Response
-        const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+        const response = await result.response;
+        const botReply = response.text() || "Sorry, I couldn't generate a response.";
 
         res.status(200).json({ reply: botReply });
 
     } catch (error) {
         console.error("API Error:", error);
-        // Return actual error for debugging
-        res.status(500).json({ reply: `Error: ${error.message}` });
+        // detailed error for client debugging
+        res.status(500).json({
+            reply: `Connection Error: ${error.message}. Please check if the 'Generative Language API' is enabled in your Google Cloud Console.`
+        });
     }
 }
